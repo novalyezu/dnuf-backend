@@ -36,3 +36,22 @@ func (h *userHandler) RegisterUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response)
 }
+
+func (h *userHandler) Login(c *gin.Context) {
+	var input user.LoginInput
+	err := c.ShouldBindJSON(&input)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, helper.WrapperResponse(http.StatusBadRequest, false, err.Error(), ""))
+		return
+	}
+
+	rsLogin, err := h.userService.Login(input)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, helper.WrapperResponse(http.StatusUnauthorized, false, err.Error(), ""))
+		return
+	}
+
+	formated := user.FormatUser(rsLogin, "token")
+
+	c.JSON(http.StatusOK, helper.WrapperResponse(http.StatusOK, true, "Login success", formated))
+}
