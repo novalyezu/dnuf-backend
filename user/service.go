@@ -9,6 +9,7 @@ import (
 type Service interface {
 	RegisterUser(input RegisterUserInput) (User, error)
 	Login(input LoginInput) (User, error)
+	CheckEmail(input CheckEmailInput) error
 }
 
 type service struct {
@@ -42,18 +43,33 @@ func (s *service) Login(input LoginInput) (User, error) {
 	email := input.Email
 	password := input.Password
 
-	user, err := s.repository.FindByEmail(email)
+	rsUser, err := s.repository.FindByEmail(email)
 	if err != nil {
-		return user, err
+		return rsUser, err
 	}
-	if user.ID == 0 {
-		return user, errors.New("Email or password is wrong")
+	if rsUser.ID == 0 {
+		return rsUser, errors.New("Email or password is wrong")
 	}
 
-	errCompare := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
+	errCompare := bcrypt.CompareHashAndPassword([]byte(rsUser.PasswordHash), []byte(password))
 	if errCompare != nil {
-		return user, errors.New("Email or password is wrong")
+		return rsUser, errors.New("Email or password is wrong")
 	}
 
-	return user, nil
+	return rsUser, nil
+}
+
+func (s *service) CheckEmail(input CheckEmailInput) error {
+	email := input.Email
+
+	rsUser, err := s.repository.FindByEmail(email)
+	if err != nil {
+		return err
+	}
+
+	if rsUser.ID != 0 {
+		return errors.New("Email is already taken")
+	}
+
+	return nil
 }

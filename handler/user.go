@@ -55,3 +55,20 @@ func (h *userHandler) Login(c *gin.Context) {
 
 	c.JSON(http.StatusOK, helper.WrapperResponse(http.StatusOK, true, "Login success", formated))
 }
+
+func (h *userHandler) CheckEmail(c *gin.Context) {
+	var input user.CheckEmailInput
+	err := c.ShouldBindJSON(&input)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, helper.WrapperResponse(http.StatusBadRequest, false, err.Error(), ""))
+		return
+	}
+
+	errEmail := h.userService.CheckEmail(input)
+	if errEmail != nil {
+		c.JSON(http.StatusConflict, helper.WrapperResponse(http.StatusConflict, false, errEmail.Error(), ""))
+		return
+	}
+
+	c.JSON(http.StatusOK, helper.WrapperResponse(http.StatusOK, true, "Email is available", ""))
+}
