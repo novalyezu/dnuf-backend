@@ -4,6 +4,8 @@ import (
 	"dnuf/helper"
 	"dnuf/user"
 	"net/http"
+	"os"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -71,4 +73,32 @@ func (h *userHandler) CheckEmail(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, helper.WrapperResponse(http.StatusOK, true, "Email is available", ""))
+}
+
+func (h *userHandler) UpdateAvatar(c *gin.Context) {
+	file, err := c.FormFile("avatar")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, helper.WrapperResponse(http.StatusBadRequest, false, err.Error(), ""))
+		return
+	}
+
+	userID := 13
+	path := "images/avatars/" + strconv.Itoa(userID) + "-" + file.Filename
+
+	errSaveFile := c.SaveUploadedFile(file, path)
+	if errSaveFile != nil {
+		c.JSON(http.StatusInternalServerError, helper.WrapperResponse(http.StatusInternalServerError, false, "Internal Server Error", ""))
+		return
+	}
+
+	rsUpdateAvatar, err := h.userService.UpdateAvatar(userID, path)
+	if err != nil {
+		os.Remove(path)
+		c.JSON(http.StatusInternalServerError, helper.WrapperResponse(http.StatusInternalServerError, false, "Internal Server Error", ""))
+		return
+	}
+
+	formated := user.FormatUser(rsUpdateAvatar, "token")
+
+	c.JSON(http.StatusOK, helper.WrapperResponse(http.StatusOK, true, "Update avatar success", formated))
 }

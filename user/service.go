@@ -2,6 +2,7 @@ package user
 
 import (
 	"errors"
+	"os"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -10,6 +11,7 @@ type Service interface {
 	RegisterUser(input RegisterUserInput) (User, error)
 	Login(input LoginInput) (User, error)
 	CheckEmail(input CheckEmailInput) error
+	UpdateAvatar(ID int, fileLocation string) (User, error)
 }
 
 type service struct {
@@ -72,4 +74,28 @@ func (s *service) CheckEmail(input CheckEmailInput) error {
 	}
 
 	return nil
+}
+
+func (s *service) UpdateAvatar(ID int, fileLocation string) (User, error) {
+	rsUser, err := s.repository.FindByID(ID)
+	if err != nil {
+		return rsUser, err
+	}
+	if rsUser.ID == 0 {
+		return rsUser, errors.New("User not found")
+	}
+
+	existFile := rsUser.AvatarFileName
+
+	rsUser.AvatarFileName = fileLocation
+	rsUpdate, err := s.repository.Update(rsUser)
+	if err != nil {
+		return User{}, err
+	}
+
+	if len(existFile) > 0 {
+		os.Remove(existFile)
+	}
+
+	return rsUpdate, nil
 }
