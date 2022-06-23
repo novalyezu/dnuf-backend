@@ -3,11 +3,15 @@ package main
 import (
 	"dnuf/auth"
 	"dnuf/handler"
+	"dnuf/helper"
 	"dnuf/user"
 	"fmt"
 	"log"
+	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -30,6 +34,43 @@ func main() {
 	api.POST("/users/register", userHandler.RegisterUser)
 	api.POST("/users/login", userHandler.Login)
 	api.POST("/users/check-email", userHandler.CheckEmail)
-	api.POST("/users/avatar", userHandler.UpdateAvatar)
+	api.POST("/users/avatar", verifyToken(authService, userService), userHandler.UpdateAvatar)
 	router.Run()
+}
+
+func verifyToken(authService auth.Service, userService user.Service) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authorization := c.GetHeader("Authorization")
+		if !strings.Contains(authorization, "Bearer") {
+			c.JSON(http.StatusUnauthorized, helper.WrapperResponse(http.StatusUnauthorized, false, "Unauthorized", ""))
+			return
+		}
+
+		var tokenString string
+		tokenSplit := strings.Split(authorization, " ")
+		if len(tokenSplit) == 2 {
+			tokenString = tokenSplit[1]
+		}
+
+		token, err := authService.ValidateToken(tokenString)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, helper.WrapperResponse(http.StatusUnauthorized, false, "Unauthorized", ""))
+			return
+		}
+
+		claim, ok := token.Claims.(jwt.MapClaims)
+
+		if !ok || !token.Valid {
+			c.JSON(http.StatusUnauthorized, helper.WrapperResponse(http.StatusUnauthorized, false, "Unauthorized", ""))
+			return
+		}
+
+		rsUser, err := userService.GetUserById(int(claim["user_id"].(float64)))
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, helper.WrapperResponse(http.StatusUnauthorized, false, "Unauthorized", ""))
+			return
+		}
+
+		c.Set("currentUser", rsUser)
+	}
 }

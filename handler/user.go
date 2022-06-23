@@ -96,7 +96,8 @@ func (h *userHandler) UpdateAvatar(c *gin.Context) {
 		return
 	}
 
-	userID := 13
+	currUser := c.MustGet("currentUser").(user.User)
+	userID := currUser.ID
 	path := "images/avatars/" + strconv.Itoa(userID) + "-" + file.Filename
 
 	errSaveFile := c.SaveUploadedFile(file, path)
