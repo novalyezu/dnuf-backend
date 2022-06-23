@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"dnuf/auth"
 	"dnuf/helper"
 	"dnuf/user"
 	"net/http"
@@ -12,10 +13,11 @@ import (
 
 type userHandler struct {
 	userService user.Service
+	authService auth.Service
 }
 
-func NewUserHandler(userService user.Service) *userHandler {
-	return &userHandler{userService: userService}
+func NewUserHandler(userService user.Service, authService auth.Service) *userHandler {
+	return &userHandler{userService: userService, authService: authService}
 }
 
 func (h *userHandler) RegisterUser(c *gin.Context) {
@@ -32,7 +34,13 @@ func (h *userHandler) RegisterUser(c *gin.Context) {
 		return
 	}
 
-	formated := user.FormatUser(newUser, "token")
+	token, err := h.authService.GenerateToken(newUser.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, helper.WrapperResponse(http.StatusInternalServerError, false, "Internal Server Error", ""))
+		return
+	}
+
+	formated := user.FormatUser(newUser, token)
 
 	response := helper.WrapperResponse(http.StatusOK, true, "Register success", formated)
 
@@ -53,7 +61,13 @@ func (h *userHandler) Login(c *gin.Context) {
 		return
 	}
 
-	formated := user.FormatUser(rsLogin, "token")
+	token, err := h.authService.GenerateToken(rsLogin.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, helper.WrapperResponse(http.StatusInternalServerError, false, "Internal Server Error", ""))
+		return
+	}
+
+	formated := user.FormatUser(rsLogin, token)
 
 	c.JSON(http.StatusOK, helper.WrapperResponse(http.StatusOK, true, "Login success", formated))
 }

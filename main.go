@@ -1,6 +1,7 @@
 package main
 
 import (
+	"dnuf/auth"
 	"dnuf/handler"
 	"dnuf/user"
 	"fmt"
@@ -19,9 +20,10 @@ func main() {
 	}
 	fmt.Println("Connected to database")
 
+	authService := auth.NewJwtService()
 	userRepository := user.NewRepository(db)
 	userService := user.NewService(userRepository)
-	userHandler := handler.NewUserHandler(userService)
+	userHandler := handler.NewUserHandler(userService, authService)
 
 	router := gin.Default()
 	api := router.Group("/api/v1")

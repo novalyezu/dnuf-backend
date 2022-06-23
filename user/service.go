@@ -50,12 +50,12 @@ func (s *service) Login(input LoginInput) (User, error) {
 		return rsUser, err
 	}
 	if rsUser.ID == 0 {
-		return rsUser, errors.New("Email or password is wrong")
+		return rsUser, errors.New("email or password is wrong")
 	}
 
 	errCompare := bcrypt.CompareHashAndPassword([]byte(rsUser.PasswordHash), []byte(password))
 	if errCompare != nil {
-		return rsUser, errors.New("Email or password is wrong")
+		return rsUser, errors.New("email or password is wrong")
 	}
 
 	return rsUser, nil
@@ -70,7 +70,7 @@ func (s *service) CheckEmail(input CheckEmailInput) error {
 	}
 
 	if rsUser.ID != 0 {
-		return errors.New("Email is already taken")
+		return errors.New("email is already taken")
 	}
 
 	return nil
