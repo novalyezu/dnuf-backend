@@ -2,6 +2,7 @@ package main
 
 import (
 	"dnuf/auth"
+	"dnuf/campaign"
 	"dnuf/handler"
 	"dnuf/helper"
 	"dnuf/user"
@@ -29,12 +30,18 @@ func main() {
 	userService := user.NewService(userRepository)
 	userHandler := handler.NewUserHandler(userService, authService)
 
+	campaignRepository := campaign.NewRepository(db)
+	campaignService := campaign.NewService(campaignRepository)
+	campaignHandler := handler.NewCampaignHandler(campaignService)
+
 	router := gin.Default()
 	api := router.Group("/api/v1")
 	api.POST("/users/register", userHandler.RegisterUser)
 	api.POST("/users/login", userHandler.Login)
 	api.POST("/users/check-email", userHandler.CheckEmail)
 	api.POST("/users/avatar", verifyToken(authService, userService), userHandler.UpdateAvatar)
+
+	api.GET("/campaigns", campaignHandler.GetAll)
 	router.Run()
 }
 
