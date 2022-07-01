@@ -43,6 +43,7 @@ func main() {
 	api.POST("/users/avatar", verifyToken(authService, userService), userHandler.UpdateAvatar)
 
 	api.GET("/campaigns", campaignHandler.GetCampaigns)
+	api.GET("/campaigns/:slug", campaignHandler.GetCampaign)
 	router.Run()
 }
 
