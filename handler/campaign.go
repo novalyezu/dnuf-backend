@@ -22,11 +22,9 @@ func (h *campaignHandler) GetCampaigns(c *gin.Context) {
 	userID := 0
 	if qUserID != "" {
 		cUserID, err := strconv.Atoi(c.Query("user_id"))
-		if err != nil {
-			c.JSON(http.StatusBadRequest, helper.WrapperResponse(http.StatusBadRequest, false, err.Error(), ""))
-			return
+		if err == nil {
+			userID = cUserID
 		}
-		userID = cUserID
 	}
 
 	rsCampaigns, err := h.campaignService.GetCampaigns(userID)
@@ -35,11 +33,7 @@ func (h *campaignHandler) GetCampaigns(c *gin.Context) {
 		return
 	}
 
-	var formatted []campaign.CampaignFormatter
-	for _, item := range rsCampaigns {
-		formattedItem := campaign.FormatCampaign(item)
-		formatted = append(formatted, formattedItem)
-	}
+	formatted := campaign.FormatCampaigns(rsCampaigns)
 
 	response := helper.WrapperResponse(http.StatusOK, true, "Get campaigns success", formatted)
 

@@ -5,9 +5,6 @@ type CampaignFormatter struct {
 	UserID           int    `json:"user_id"`
 	Name             string `json:"name"`
 	ShortDescription string `json:"short_description"`
-	Description      string `json:"description"`
-	Perks            string `json:"perks"`
-	BackerCount      int    `json:"backer_count"`
 	GoalAmount       int    `json:"goal_amount"`
 	CurrentAmount    int    `json:"current_amount"`
 	Slug             string `json:"slug"`
@@ -15,22 +12,30 @@ type CampaignFormatter struct {
 }
 
 func FormatCampaign(campaign Campaign) CampaignFormatter {
-	var image string
+	formatted := CampaignFormatter{}
+	formatted.ID = campaign.ID
+	formatted.UserID = campaign.UserID
+	formatted.Name = campaign.Name
+	formatted.ShortDescription = campaign.ShortDescription
+	formatted.GoalAmount = campaign.GoalAmount
+	formatted.CurrentAmount = campaign.CurrentAmount
+	formatted.Slug = campaign.Slug
+	formatted.Image = ""
+
 	if len(campaign.CampaignImages) > 0 {
-		image = campaign.CampaignImages[0].FileName
+		formatted.Image = campaign.CampaignImages[0].FileName
 	}
-	formatted := CampaignFormatter{
-		ID:               campaign.ID,
-		UserID:           campaign.UserID,
-		Name:             campaign.Name,
-		ShortDescription: campaign.ShortDescription,
-		Description:      campaign.Description,
-		Perks:            campaign.Perks,
-		BackerCount:      campaign.BackerCount,
-		GoalAmount:       campaign.GoalAmount,
-		CurrentAmount:    campaign.CurrentAmount,
-		Slug:             campaign.Slug,
-		Image:            image,
+
+	return formatted
+}
+
+func FormatCampaigns(campaign []Campaign) []CampaignFormatter {
+	formatted := []CampaignFormatter{}
+
+	for _, item := range campaign {
+		formattedItem := FormatCampaign(item)
+		formatted = append(formatted, formattedItem)
 	}
+
 	return formatted
 }
