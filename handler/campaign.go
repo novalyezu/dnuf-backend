@@ -4,6 +4,7 @@ import (
 	"dnuf/campaign"
 	"dnuf/helper"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,8 +17,19 @@ func NewCampaignHandler(campaignService campaign.Service) *campaignHandler {
 	return &campaignHandler{campaignService: campaignService}
 }
 
-func (h *campaignHandler) GetAll(c *gin.Context) {
-	rsCampaigns, err := h.campaignService.GetAll()
+func (h *campaignHandler) GetCampaigns(c *gin.Context) {
+	qUserID := c.Query("user_id")
+	userID := 0
+	if qUserID != "" {
+		cUserID, err := strconv.Atoi(c.Query("user_id"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, helper.WrapperResponse(http.StatusBadRequest, false, err.Error(), ""))
+			return
+		}
+		userID = cUserID
+	}
+
+	rsCampaigns, err := h.campaignService.GetCampaigns(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, helper.WrapperResponse(http.StatusInternalServerError, false, "Internal Server Error", ""))
 		return
@@ -29,7 +41,7 @@ func (h *campaignHandler) GetAll(c *gin.Context) {
 		formatted = append(formatted, formattedItem)
 	}
 
-	response := helper.WrapperResponse(http.StatusOK, true, "Register success", formatted)
+	response := helper.WrapperResponse(http.StatusOK, true, "Get campaigns success", formatted)
 
 	c.JSON(http.StatusOK, response)
 }

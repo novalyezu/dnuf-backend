@@ -41,7 +41,7 @@ func main() {
 	api.POST("/users/check-email", userHandler.CheckEmail)
 	api.POST("/users/avatar", verifyToken(authService, userService), userHandler.UpdateAvatar)
 
-	api.GET("/campaigns", campaignHandler.GetAll)
+	api.GET("/campaigns", campaignHandler.GetCampaigns)
 	router.Run()
 }
 
