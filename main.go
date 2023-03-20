@@ -18,7 +18,7 @@ import (
 )
 
 func main() {
-	dsn := "root:@tcp(127.0.0.1:3306)/db_dnuf?charset=utf8&parseTime=True&loc=Local"
+	dsn := "root:123qweasd@tcp(127.0.0.1:3306)/db_dnuf?charset=utf8&parseTime=True&loc=Local"
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal(err.Error())
@@ -44,6 +44,7 @@ func main() {
 
 	api.GET("/campaigns", campaignHandler.GetCampaigns)
 	api.GET("/campaigns/:slug", campaignHandler.GetCampaign)
+	api.POST("/campaigns", verifyToken(authService, userService), campaignHandler.CreateCampaign)
 	router.Run()
 }
 

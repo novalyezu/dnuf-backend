@@ -3,6 +3,7 @@ package handler
 import (
 	"dnuf/campaign"
 	"dnuf/helper"
+	"dnuf/user"
 	"net/http"
 	"strconv"
 
@@ -46,11 +47,35 @@ func (h *campaignHandler) GetCampaign(c *gin.Context) {
 	rsCampaign, err := h.campaignService.GetCampaign(slug)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, helper.WrapperResponse(http.StatusInternalServerError, false, "Internal Server Error", ""))
+		return
 	}
 
 	formatted := campaign.FormatCampaignDetail(rsCampaign)
 
 	response := helper.WrapperResponse(http.StatusOK, true, "Get campaign success", formatted)
+
+	c.JSON(http.StatusOK, response)
+}
+
+func (h *campaignHandler) CreateCampaign(c *gin.Context) {
+	var input campaign.CreateCampaignInput
+	err := c.ShouldBindJSON(&input)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, helper.WrapperResponse(http.StatusBadRequest, false, err.Error(), ""))
+		return
+	}
+	currUser := c.MustGet("currentUser").(user.User)
+	input.User = currUser
+
+	newCampaign, errCreateCampaign := h.campaignService.CreateCampaign(input)
+	if errCreateCampaign != nil {
+		c.JSON(http.StatusInternalServerError, helper.WrapperResponse(http.StatusInternalServerError, false, "Internal Server Error", ""))
+		return
+	}
+
+	formatted := campaign.FormatCampaignDetail(newCampaign)
+
+	response := helper.WrapperResponse(http.StatusOK, true, "Create campaign success", formatted)
 
 	c.JSON(http.StatusOK, response)
 }
