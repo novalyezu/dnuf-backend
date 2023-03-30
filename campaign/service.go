@@ -1,6 +1,7 @@
 package campaign
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/gosimple/slug"
@@ -8,8 +9,10 @@ import (
 
 type Service interface {
 	GetCampaigns(userID int) ([]Campaign, error)
-	GetCampaign(slug string) (Campaign, error)
+	GetCampaignBySlug(slug string) (Campaign, error)
+	GetCampaignByID(campaignID string) (Campaign, error)
 	CreateCampaign(input CreateCampaignInput) (Campaign, error)
+	UpdateCampaign(campaignID string, input CreateCampaignInput) (Campaign, error)
 }
 
 type service struct {
@@ -35,10 +38,24 @@ func (s *service) GetCampaigns(userID int) ([]Campaign, error) {
 	return rsCampaigns, nil
 }
 
-func (s *service) GetCampaign(slug string) (Campaign, error) {
+func (s *service) GetCampaignBySlug(slug string) (Campaign, error) {
 	rsCampaign, err := s.repository.FindBySlug(slug)
 	if err != nil {
 		return rsCampaign, err
+	}
+	if rsCampaign.ID == 0 {
+		return rsCampaign, errors.New("NOT_FOUND")
+	}
+	return rsCampaign, nil
+}
+
+func (s *service) GetCampaignByID(campaignID string) (Campaign, error) {
+	rsCampaign, err := s.repository.FindByID(campaignID)
+	if err != nil {
+		return rsCampaign, err
+	}
+	if rsCampaign.ID == 0 {
+		return rsCampaign, errors.New("NOT_FOUND")
 	}
 	return rsCampaign, nil
 }
@@ -58,4 +75,29 @@ func (s *service) CreateCampaign(input CreateCampaignInput) (Campaign, error) {
 		return newCampaign, err
 	}
 	return newCampaign, nil
+}
+
+func (s *service) UpdateCampaign(campaignID string, input CreateCampaignInput) (Campaign, error) {
+	campaign, err := s.repository.FindByID(campaignID)
+	if err != nil {
+		return campaign, err
+	}
+	if campaign.ID == 0 {
+		return campaign, errors.New("NOT_FOUND")
+	}
+	if campaign.UserID != input.User.ID {
+		return campaign, errors.New("NOT_FOUND")
+	}
+
+	campaign.Name = input.Name
+	campaign.ShortDescription = input.ShortDescription
+	campaign.Description = input.Description
+	campaign.GoalAmount = input.GoalAmount
+	campaign.Perks = input.Perks
+
+	rsCampaign, errUpdate := s.repository.Update(campaign)
+	if errUpdate != nil {
+		return rsCampaign, errUpdate
+	}
+	return rsCampaign, nil
 }
