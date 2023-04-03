@@ -148,3 +148,38 @@ func (h *campaignHandler) UpdateCampaign(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response)
 }
+
+func (h *campaignHandler) CreateCampaignImage(c *gin.Context) {
+	var input campaign.CreateCampaignImageInput
+	errBindInput := c.ShouldBind(&input)
+	if errBindInput != nil {
+		c.JSON(http.StatusBadRequest, helper.WrapperResponse(http.StatusBadRequest, false, errBindInput.Error(), ""))
+		return
+	}
+
+	currUser := c.MustGet("currentUser").(user.User)
+	file, errBindFile := c.FormFile("image")
+	if errBindFile != nil {
+		c.JSON(http.StatusBadRequest, helper.WrapperResponse(http.StatusBadRequest, false, errBindFile.Error(), ""))
+		return
+	}
+
+	path := "images/" + strconv.Itoa(currUser.ID) + "-" + file.Filename
+	errUploadFile := c.SaveUploadedFile(file, path)
+	if errUploadFile != nil {
+		c.JSON(http.StatusInternalServerError, helper.WrapperResponse(http.StatusInternalServerError, false, "Internal Server Error", ""))
+		return
+	}
+
+	newCampaignImage, errSaveImage := h.campaignService.SaveCampaignImage(input, path)
+	if errSaveImage != nil {
+		c.JSON(http.StatusInternalServerError, helper.WrapperResponse(http.StatusInternalServerError, false, "Internal Server Error", ""))
+		return
+	}
+
+	formatted := campaign.FormatCampaignImage(newCampaignImage)
+
+	response := helper.WrapperResponse(http.StatusOK, true, "Create campaign image success", formatted)
+
+	c.JSON(http.StatusOK, response)
+}

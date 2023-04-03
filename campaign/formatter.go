@@ -104,3 +104,12 @@ func FormatCampaignDetail(campaign Campaign) CampaignDetailFormatter {
 
 	return formatted
 }
+
+func FormatCampaignImage(campaignImage CampaignImage) CampaignImageFormatter {
+	formatted := CampaignImageFormatter{}
+	formatted.ID = campaignImage.ID
+	formatted.FileName = campaignImage.FileName
+	formatted.IsPrimary = campaignImage.IsPrimary == 1
+
+	return formatted
+}

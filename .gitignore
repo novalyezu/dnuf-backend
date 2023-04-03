@@ -22,3 +22,6 @@ go.work
 
 # air
 tmp
+
+# static files
+images
